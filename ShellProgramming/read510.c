@@ -11,13 +11,15 @@ int main(int args, char* argv[]) {
         return 1;
     }
     
-    lseek(fd, 5, SEEK_SET);
+    lseek(fd, 4, SEEK_SET);
     int bytes = read(fd, text, 6); // read 5th to 10th bytes
     text[bytes] = '\0';
     
     if(bytes != 6) {
         return 3;
     }
+
+    printf("%s", text);
     
     return 0;
 }
