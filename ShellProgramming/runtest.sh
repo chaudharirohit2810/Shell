@@ -35,7 +35,6 @@ fi
 
 # Test for write10end
 gcc write10end.c -o write10end
-# printf "Hi, I am Rohit. This is a read file. What is your name?" > /tmp/write10end_file # Write into file
 bytes_before_writing=`wc -c < /tmp/confirmance_file` # Store number of bytes before writing 10 bytes
 cp /tmp/confirmance_file /tmp/confirmance_file.bak # create a backup file to test read
 ./write10end /tmp/confirmance_file > /tmp/confirmance_test_file # Redirect read output in test file
@@ -52,7 +51,7 @@ then
 else
 	echo "write10end fail"
 fi
-rm /tmp/confirmance_file.bak /tmp/confirmance_test_file # remove the generated files
+
 
 
 
@@ -91,10 +90,10 @@ then
 else
 	echo "rename fail"
 fi
-rm /tmp/confirmance_file.bak
+
 
 
 
 # Delete object files
-rm read100 read510 write10end copy rename /tmp/confirmance*_file
+rm read100 read510 write10end copy rename /tmp/confirmance*_file*
 
