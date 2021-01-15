@@ -4,14 +4,24 @@
 
 # Test for read100
 gcc read100.c -o read100
+content="Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti, accusantium quisquam, necessitatibus tenetur alias eaque nobis nemo dolorem similique deleniti asperiores nisi assumenda officiis, minus delectus ipsa quo. Nulla officiis id soluta labore! Enim, rem. Saepe voluptatum ut provident nam veritatis sed fugit suscipit laborum sit eius, est labore. Modi deserunt quo, asperiores numquam aliquam adipisci ipsam." 
 touch /tmp/confirmance_file
-./read100 /tmp/confirmance_file
+./read100 /tmp/confirmance_file "$content"
 if [ $? -eq 0 -a `wc -c < /tmp/confirmance_file` -eq 100 ]
 then
-	echo "read100 pass"
+	var1=`echo "$content" | head -c 100`
+	var2=`cat /tmp/confirmance_file`
+	
+	if [ "$var1" == "$var2" ] # Check the content of file is same or not
+	then
+		echo "read100 pass"
+	else
+		echo "read100 fail"
+	fi
 else
 	echo "read100 fail"
 fi
+
 
 
 
