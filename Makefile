@@ -1,3 +1,3 @@
 shell: myshell.c
-	cc myshell.c
+	gcc myshell.c
 	./a.out
