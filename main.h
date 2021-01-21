@@ -1,0 +1,2 @@
+
+int checkOutputRedirection(char* command);
