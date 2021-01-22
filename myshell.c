@@ -21,7 +21,7 @@ void executePipeCommands(char* commands[], int n) {
 
             close(fd[0]);  // Close the read end in child
 
-            if (checkOutputRedirection(commands[i]) != -1) {
+            if (checkOutputRedirection(commands[i]) != -1 || checkInputRedirection(commands[i]) != -1) {
                 exit(0);
             }
 

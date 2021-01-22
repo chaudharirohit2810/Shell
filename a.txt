@@ -1,0 +1,16 @@
+.
+..
+a.txt
+.git
+lib.h
+main.h
+Makefile
+myshell
+myshell.c
+myshell.o
+redirection.c
+redirection.o
+Test
+utils.c
+utils.h
+utils.o
