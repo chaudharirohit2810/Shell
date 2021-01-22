@@ -105,8 +105,13 @@ int decodeInputRedirection(char* command, char* args[]) {
 
 int checkInputRedirection(char* command) {
     char* redirectionArgs[20];
-    if (decodeInputRedirection(command, redirectionArgs) == -1) {
-        return -1;  // Command does not contain input redirection
+    int res = decodeInputRedirection(command, redirectionArgs);
+    if (res == -1) {
+        return -1;  // Command does not contain output redirection
+    }
+    char* temp = redirectionArgs[0];
+    for (int i = 2; i < res; i++) {
+        strcat(temp, redirectionArgs[i]);
     }
 
     if (executeInputRedirection(redirectionArgs[0], redirectionArgs[1]) == -1) {
