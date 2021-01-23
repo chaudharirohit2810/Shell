@@ -8,27 +8,28 @@ void executePipeCommands(char* commands[], int n) {
     int readfd = 0;  // To store the output of previous command
 
     for (int i = 0; i < n; i++) {
-        if (executeCd(commands[i]) == 0) {
-            continue;  // If the command cd exeucuted successfully
+        if (executeChangeDirectory(commands[i]) == 0) {
+            continue;  // If the command cd executed successfully
         }
+
         pipe(fd);
         int pid = fork();
         if (pid == 0) {
             // Child Process
-            if (i != 0) {
+            if (i != 0) {                    // First Command
                 dup2(readfd, STDIN_FILENO);  // If the command is not the first command then give standard output of previous as input
             }
-            if (i != n - 1) {
+            if (i != n - 1) {                // Last Command
                 dup2(fd[1], STDOUT_FILENO);  // If the command is not the last command then store the standard output
             }
 
             close(fd[0]);  // Close the read end in child
 
-            if (executeRedirection(commands[i]) == 0) {
+            if (executeRedirection(commands[i]) == 0) {  // Check redirection
                 exit(0);
             }
 
-            if (executeCommand(commands[i]) == -1) {  // To check if error has occured
+            if (executeCommand(commands[i]) == -1) {  // Execute normal command
                 close(fd[1]);
                 close(readfd);
                 exit(0);
@@ -54,7 +55,7 @@ int main() {
         printf("myshell>");
         scanf("%[^\n]%*c", cmd);
 
-        if (checkExit(cmd) == -1) {
+        if (checkExit(cmd) == 0) {
             return 0;
         }
 

@@ -7,20 +7,13 @@
 int executeOutputRedirection(char* command, char* filename) {
     int fd = open(filename, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH);
     if (fd == -1) {
-        return -1;  // Cannot create file so return errorcode
+        return -1;  // Cannot create a file so return errorcode
     }
 
-    int pid = fork();
-    if (pid == 0) {
-        dup2(fd, STDOUT_FILENO);  // To store output in create file
-        close(fd);
-        if (executeCommand(command) == -1) {
-            close(fd);
-            exit(0);  // Something went wrong while executing process
-        }
-    } else {
-        close(fd);
-        wait(0);
+    dup2(fd, STDOUT_FILENO);  // To store output in create file
+    close(fd);
+    if (executeCommand(command) == -1) {
+        return -1;  // Something went wrong while executing process
     }
     return 0;  // Command got executed successfully
 }
@@ -44,6 +37,7 @@ int decodeOutputRedirection(char* command, char* args[]) {
     return i;  // Return the number of arguements
 }
 
+// Combine decode and execute of output redirection
 int checkOutputRedirection(char* command) {
     char* redirectionArgs[20];
     int res = decodeOutputRedirection(command, redirectionArgs);
@@ -55,7 +49,6 @@ int checkOutputRedirection(char* command) {
         strcat(temp, redirectionArgs[i]);
         strcat(temp, " ");
     }
-    printf("%s\n", temp);
     if (executeOutputRedirection(temp, redirectionArgs[1]) == -1) {
         return -1;  // Something went wrong file while executing redirection
     }
@@ -71,17 +64,10 @@ int executeInputRedirection(char* command, char* filename) {
         return -1;  // Cannot read or find file
     }
 
-    int pid = fork();
-    if (pid == 0) {
-        dup2(fd, STDIN_FILENO);  // Pass the file as standard input
-        close(fd);
-        if (executeCommand(command) == -1) {
-            close(fd);
-            exit(0);  // Something went wrong while executing process
-        }
-    } else {
-        close(fd);
-        wait(0);
+    dup2(fd, STDIN_FILENO);  // Pass the file as standard input
+    close(fd);
+    if (executeCommand(command) == -1) {
+        return -1;  // Something went wrong while executing process
     }
     return 0;  // Command got executed successfully
 }
@@ -105,6 +91,7 @@ int decodeInputRedirection(char* command, char* args[]) {
     return i;  // Return the number of arguements
 }
 
+// Combine decode and execute of output redirection
 int checkInputRedirection(char* command) {
     char* redirectionArgs[20];
     int res = decodeInputRedirection(command, redirectionArgs);
@@ -114,6 +101,7 @@ int checkInputRedirection(char* command) {
     char* temp = redirectionArgs[0];
     for (int i = 2; i < res; i++) {
         strcat(temp, redirectionArgs[i]);
+        strcat(temp, " ");
     }
 
     if (executeInputRedirection(redirectionArgs[0], redirectionArgs[1]) == -1) {
@@ -121,6 +109,8 @@ int checkInputRedirection(char* command) {
     }
     return 0;
 }
+
+// ---------------------------------------------------------------------Main Redirection Functions------------------------------------------------------------
 
 // To execute both input and output redirection
 int executeRedirection(char* command) {

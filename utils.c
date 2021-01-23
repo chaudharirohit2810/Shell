@@ -18,9 +18,9 @@ int tokenizeValues(char* args[], char cmd[]) {
 int checkExit(char* cmd) {
     if (strcmp(cmd, "exit") == 0) {
         printf("bye\n");
-        return -1;
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 // Utility function to execute command

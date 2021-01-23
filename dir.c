@@ -7,7 +7,7 @@
 // -1: if command is not cd
 // -2: more than one arguement to cd
 // -3: error occured while executing cd
-int executeCd(char* command) {
+int executeChangeDirectory(char* command) {
     char* args[20];
     char* cmdTemp = malloc(strlen(command) + 1);
     strcpy(cmdTemp, command);
