@@ -20,6 +20,7 @@ int executeChangeDirectory(char* command) {
         return -2;  // More than one arguement provided to cd
     }
     if (chdir(args[1]) == -1) {
+        perror("Error");
         return -3;  // error occured while executing cd
     }
     return 0;

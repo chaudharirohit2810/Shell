@@ -8,7 +8,7 @@ void executePipeCommands(char* commands[], int n) {
     int readfd = 0;  // To store the output of previous command
 
     for (int i = 0; i < n; i++) {
-        if (executeChangeDirectory(commands[i]) == 0) {
+        if (executeChangeDirectory(commands[i]) != -1) {
             continue;  // If the command cd executed successfully
         }
 
@@ -55,7 +55,7 @@ int main() {
         printf("myshell>");
         scanf("%[^\n]%*c", cmd);
 
-        if (checkExit(cmd) == 0) {
+        if (checkExit(cmd) == 0) {  // check for "exit" command
             return 0;
         }
 
