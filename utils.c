@@ -1,7 +1,7 @@
 #include "lib.h"
 
 // Utility function to separate different arguements
-void tokenizeValues(char* args[], char cmd[]) {
+int tokenizeValues(char* args[], char cmd[]) {
     char* token = strtok(cmd, " ");
     int i = 0;
     while (token) {
@@ -11,6 +11,7 @@ void tokenizeValues(char* args[], char cmd[]) {
         i++;
     }
     args[i] = NULL;
+    return i;
 }
 
 // To exit out of shell

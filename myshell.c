@@ -8,6 +8,9 @@ void executePipeCommands(char* commands[], int n) {
     int readfd = 0;  // To store the output of previous command
 
     for (int i = 0; i < n; i++) {
+        if (executeCd(commands[i]) == 0) {
+            continue;  // If the command cd exeucuted successfully
+        }
         pipe(fd);
         int pid = fork();
         if (pid == 0) {
@@ -21,7 +24,7 @@ void executePipeCommands(char* commands[], int n) {
 
             close(fd[0]);  // Close the read end in child
 
-            if (checkOutputRedirection(commands[i]) != -1 || checkInputRedirection(commands[i]) != -1) {
+            if (executeRedirection(commands[i]) == 0) {
                 exit(0);
             }
 

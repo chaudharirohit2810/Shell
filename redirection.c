@@ -53,7 +53,9 @@ int checkOutputRedirection(char* command) {
     char* temp = redirectionArgs[0];
     for (int i = 2; i < res; i++) {
         strcat(temp, redirectionArgs[i]);
+        strcat(temp, " ");
     }
+    printf("%s\n", temp);
     if (executeOutputRedirection(temp, redirectionArgs[1]) == -1) {
         return -1;  // Something went wrong file while executing redirection
     }
@@ -118,4 +120,12 @@ int checkInputRedirection(char* command) {
         return -1;  // Something went wrong file while executing redirection
     }
     return 0;
+}
+
+// To execute both input and output redirection
+int executeRedirection(char* command) {
+    if (checkOutputRedirection(command) != -1 || checkInputRedirection(command) != -1) {
+        return 0;
+    }
+    return -1;
 }
