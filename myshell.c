@@ -1,33 +1,64 @@
 #include "lib.h"
 #include "main.h"
 #include "utils.h"
+#define DEFAULT_PID 0
 
-int currentpid = -1;
-int stoppedpid = -1;
-
-int pidsRunningInBackground[512] = {-1};
-int pidsRunningInBackgroundCount = 0;
+int currentpid = DEFAULT_PID;
+int stoppedpid = DEFAULT_PID;
 
 void ctrl_c_handler(int sig) {
-    if (currentpid != -1) {
-        kill(currentpid, SIGKILL);
+    if (currentpid != DEFAULT_PID) {
+        if (kill(currentpid, SIGKILL) == -1) {  // Kill current process
+            perror("Error:");
+            return;
+        }
         printf("Process with pid %d terminated\n", currentpid);
+        currentpid = DEFAULT_PID;
     }
 }
 
 void ctrl_z_handler(int sig) {
-    if (currentpid != -1) {
-        kill(currentpid, SIGSTOP);
+    if (currentpid != DEFAULT_PID) {            // Only if particular process is running
+        if (kill(currentpid, SIGSTOP) == -1) {  // Stop current process
+            perror("Error:");
+            currentpid = DEFAULT_PID;
+            return;
+        }
         printf("Process with pid %d Stopped\n", currentpid);
-        stoppedpid = currentpid;
+        stoppedpid = currentpid;  // For handling of bg and fg
+        currentpid = DEFAULT_PID;
     }
 }
 
-void continue_process() {
-    if (stoppedpid != -1) {
-        kill(stoppedpid, SIGCONT);
+// To handle "fg" command
+void continue_process_in_fg() {
+    if (stoppedpid != DEFAULT_PID) {
+        if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
+            perror("Error:");
+            stoppedpid = DEFAULT_PID;
+            return;
+        }
+        currentpid = stoppedpid;  // When the process is started in foreground again set the currentpid for Ctrl+C handling
         printf("Process with pid %d continued\n", stoppedpid);
-        stoppedpid = -1;
+        waitpid(stoppedpid, NULL, WUNTRACED);  // Wait for process to end as process is in forefround
+    } else {
+        printf("No stopped process exists\n");
+    }
+}
+
+// To handle "bg" command
+void continue_process_in_bg() {
+    if (stoppedpid != DEFAULT_PID) {
+        if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
+            perror("Error:");
+            stoppedpid = DEFAULT_PID;
+            return;
+        }
+        // Set the pids to default
+        stoppedpid = DEFAULT_PID;
+        currentpid = DEFAULT_PID;
+        printf("Process with pid %d continued\n", stoppedpid);
+
     } else {
         printf("No stopped process exists\n");
     }
@@ -69,10 +100,6 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
             return;
         }
 
-        if (isBackground == 1) {
-            pidsRunningInBackground[pidsRunningInBackgroundCount++] = pid;
-        }
-
         currentpid = pid;
         if (pid == 0) {
             // Child Process
@@ -100,9 +127,8 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
             if (isBackground == 0) {
                 waitpid(-1, NULL, WUNTRACED);
             }
-            currentpid = -1;  // Reset the current pid value
-            close(fd[1]);     // Close the write end in parent
-            readfd = fd[0];   // Store the output of previous command
+            close(fd[1]);    // Close the write end in parent
+            readfd = fd[0];  // Store the output of previous command
         }
     }
 }
@@ -123,6 +149,16 @@ int tokenizePipeCommands(char* cmd, char* pipeCommands[]) {
 
 // Wrapper to execute piped commands
 void pipeWrapper(char* command, int isBackground) {
+    int i = -1;
+    do {
+        // To handle the condition of | after &
+        i++;
+        if (command[i] == '|') {
+            printf("myshell: syntax error near unexpected token `|'\n");
+            return;
+        }
+    } while (command[i] == ' ');
+
     char* pipeCommands[20];
     int pipeCommandsCount = tokenizePipeCommands(command, pipeCommands);
     executePipeCommands(pipeCommands, pipeCommandsCount, isBackground);
@@ -148,7 +184,12 @@ int main() {
         }
 
         if (strcmp(cmd, "bg") == 0) {
-            continue_process();
+            continue_process_in_bg();
+            continue;
+        }
+
+        if (strcmp(cmd, "fg") == 0) {
+            continue_process_in_fg();
             continue;
         }
 
