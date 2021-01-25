@@ -12,3 +12,22 @@ int executeRedirection(char* command);
 // -2: more than one arguement to cd
 // -3: error occured while executing cd
 int executeChangeDirectory(char* command);
+
+
+
+// -------------------------------------------------------------------Signal Handlers---------------------------------------------------------------------
+// To handle SIGINT in parent
+void startCtrlCHandler();
+
+// To handle SIGTSTP in parent
+void startCtrlZHandler();
+
+// Setter for currentpid
+void setCurrentpid(int pid);
+
+// To execute "fg" command
+void executeFg();
+
+// To handle "bg" command
+void executeBg();
+

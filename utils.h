@@ -20,3 +20,7 @@ int executeCommand(char* command);
 // Separate background processes
 // Return Value: Number of arguements, -1 if command does not contain background processes
 int isBackground(char* command, char* bgProcesses[] );
+
+
+// Ignore Ctrl+z and Ctrl+c signal in child
+void ignoreSignals();

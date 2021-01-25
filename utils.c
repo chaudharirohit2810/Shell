@@ -51,3 +51,12 @@ int isBackground(char* command, char* bgProcesses[]) {
     }
     return i;
 }
+
+// To ignore Ctrl + Z and Ctrl + C signals for child
+void ignoreSignals() {
+    struct sigaction childsigact;
+    childsigact.sa_handler = SIG_IGN;
+    childsigact.sa_flags = SA_RESTART;
+    sigaction(SIGINT, &childsigact, NULL);
+    sigaction(SIGTSTP, &childsigact, NULL);
+}
