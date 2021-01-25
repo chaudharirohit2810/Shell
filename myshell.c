@@ -1,7 +1,7 @@
 #include "lib.h"
 #include "main.h"
 #include "utils.h"
-#define DEFAULT_PID 0
+#define DEFAULT_PID -10
 
 int currentpid = DEFAULT_PID;
 int stoppedpid = DEFAULT_PID;
@@ -9,18 +9,19 @@ int stoppedpid = DEFAULT_PID;
 void ctrl_c_handler(int sig) {
     if (currentpid != DEFAULT_PID) {
         if (kill(currentpid, SIGKILL) == -1) {  // Kill current process
-            perror("Error:");
+            perror("Error");
             return;
         }
         printf("Process with pid %d terminated\n", currentpid);
         currentpid = DEFAULT_PID;
+        stoppedpid = DEFAULT_PID;
     }
 }
 
 void ctrl_z_handler(int sig) {
     if (currentpid != DEFAULT_PID) {            // Only if particular process is running
         if (kill(currentpid, SIGSTOP) == -1) {  // Stop current process
-            perror("Error:");
+            perror("Error");
             currentpid = DEFAULT_PID;
             return;
         }
@@ -34,7 +35,7 @@ void ctrl_z_handler(int sig) {
 void continue_process_in_fg() {
     if (stoppedpid != DEFAULT_PID) {
         if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
-            perror("Error:");
+            perror("Error");
             stoppedpid = DEFAULT_PID;
             return;
         }
@@ -50,15 +51,13 @@ void continue_process_in_fg() {
 void continue_process_in_bg() {
     if (stoppedpid != DEFAULT_PID) {
         if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
-            perror("Error:");
+            perror("Error");
             stoppedpid = DEFAULT_PID;
             return;
         }
+        printf("Process with pid %d continued\n", stoppedpid);
         // Set the pids to default
         stoppedpid = DEFAULT_PID;
-        currentpid = DEFAULT_PID;
-        printf("Process with pid %d continued\n", stoppedpid);
-
     } else {
         printf("No stopped process exists\n");
     }
@@ -101,8 +100,14 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
         }
 
         currentpid = pid;
-        if (pid == 0) {
-            // Child Process
+        if (pid == 0) {  // Child Process
+            // Ignore Ctrl + Z and Ctrl + C signals in child
+            struct sigaction childsigact;
+            childsigact.sa_handler = SIG_IGN;
+            childsigact.sa_flags = SA_RESTART;
+            sigaction(SIGINT, &childsigact, NULL);
+            sigaction(SIGTSTP, &childsigact, NULL);
+
             if (i != 0) {                    // First Command
                 dup2(readfd, STDIN_FILENO);  // If the command is not the first command then give standard output of previous as input
             }
@@ -122,9 +127,8 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
                 exit(0);
             }
 
-        } else {
-            // Parent process
-            if (isBackground == 0) {
+        } else {                      // Parent process
+            if (isBackground == 0) {  // wait only if process is not required to run in background
                 waitpid(-1, NULL, WUNTRACED);
             }
             close(fd[1]);    // Close the write end in parent
