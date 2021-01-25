@@ -1,6 +1,5 @@
 shell: myshell.o utils.o redirection.o dir.o
 	cc myshell.o utils.o redirection.o dir.o -o myshell
-	./myshell
 mainshell: myshell.c
 	cc -c myshell.c
 utils: utils.c

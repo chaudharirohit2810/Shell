@@ -15,3 +15,8 @@ int checkExit(char* cmd);
 // 0: Command executed successfully
 // -1: command execution failed
 int executeCommand(char* command);
+
+
+// Separate background processes
+// Return Value: Number of arguements, -1 if command does not contain background processes
+int isBackground(char* command, char* bgProcesses[] );
