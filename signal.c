@@ -1,24 +1,54 @@
 #include "lib.h"
 
 int currentpid = DEFAULT_PID;
-int stoppedpid = DEFAULT_PID;
+char* currentCommand = NULL;
+
+typedef struct stoppedProcess {
+    char* command;
+    int pid;
+} stoppedProcess;
+
+stoppedProcess* stoppedProcesses[100];
+
+int stoppedProcessesCount = 0;
+int bgIndex = 0;
+
+void addStoppedProcess(int pid, char* cmd) {
+    stoppedProcess* process = (stoppedProcess*)malloc(sizeof(stoppedProcess));
+    process->command = cmd;
+    process->pid = pid;
+    stoppedProcesses[stoppedProcessesCount] = process;
+    stoppedProcessesCount++;
+    bgIndex++;
+}
 
 // Setter for currentpid
 void setCurrentpid(int pid) {
     currentpid = pid;
 }
 
-// -------------------------------------------------------------------Ctrl + C Handler--------------------------------------------------------------------------
+void setCurrentCommand(char* cmd) {
+    if (cmd == NULL) {
+        currentCommand = NULL;
+        return;
+    }
+    currentCommand = malloc(strlen(cmd) + 1);
+    strcpy(currentCommand, cmd);
+}
 
+// -------------------------------------------------------------------Ctrl + C Handler--------------------------------------------------------------------------
+// Signal handler for SIGINT
 void ctrl_c_handler(int sig) {
     if (currentpid != DEFAULT_PID) {
         if (kill(currentpid, SIGKILL) == -1) {  // Kill current process
-            perror("Error");
+            perror("rsh");
             return;
         }
-        printf("Process with pid %d terminated\n", currentpid);
-        currentpid = DEFAULT_PID;
-        stoppedpid = DEFAULT_PID;
+        stoppedProcessesCount--;
+        bgIndex--;
+        printf("\npid:%d\tkilled\t\t\t%s\n", currentpid, currentCommand);
+        setCurrentpid(DEFAULT_PID);
+        setCurrentCommand(NULL);
     }
 }
 
@@ -37,13 +67,21 @@ void startCtrlCHandler() {
 void ctrl_z_handler(int sig) {
     if (currentpid != DEFAULT_PID) {            // Only if particular process is running
         if (kill(currentpid, SIGSTOP) == -1) {  // Stop current process
-            perror("Error");
+            perror("rsh");
             currentpid = DEFAULT_PID;
             return;
         }
-        printf("Process with pid %d Stopped\n", currentpid);
-        stoppedpid = currentpid;  // For handling of bg and fg
-        currentpid = DEFAULT_PID;
+        int flag = 0;
+        for (int i = 0; i < stoppedProcessesCount; i++) {
+            if (stoppedProcesses[i]->pid == currentpid) {
+                flag = 1;
+            }
+        }
+        if (flag != 1) {
+            addStoppedProcess(currentpid, currentCommand);
+        }
+        int printIndex = flag == 0 ? stoppedProcessesCount : bgIndex;
+        printf("\n[%d]+\tStopped\t\t\t%s [pid: %d]\n", printIndex, currentCommand, currentpid);
     }
 }
 
@@ -60,32 +98,39 @@ void startCtrlZHandler() {
 
 // To execute "fg" command
 void executeFg() {
-    if (stoppedpid != DEFAULT_PID) {
-        if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
-            perror("Error");
-            stoppedpid = DEFAULT_PID;
+    if (bgIndex == 0 && stoppedProcessesCount != 0) {
+        bgIndex = stoppedProcessesCount;
+    }
+    if (bgIndex != 0) {
+        int pid = stoppedProcesses[bgIndex - 1]->pid;
+        char* command = stoppedProcesses[bgIndex - 1]->command;
+        printf("%s\n", command);
+        if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
+            perror("rsh");
             return;
         }
-        currentpid = stoppedpid;  // When the process is started in foreground again set the currentpid for Ctrl+C handling
-        printf("Process with pid %d continued\n", stoppedpid);
-        waitpid(stoppedpid, NULL, WUNTRACED);  // Wait for process to end as process is in forefround
+        // When the process is started in foreground again set the current pid and command values  for Ctrl+C handling
+        setCurrentpid(pid);
+        setCurrentCommand(command);
+
+        waitpid(pid, NULL, WUNTRACED);  // Wait for process to end as process is in forefround
     } else {
-        printf("No stopped process exists\n");
+        printf("rsh: No process available\n");
     }
 }
 
 // To execute "bg" command
 void executeBg() {
-    if (stoppedpid != DEFAULT_PID) {
-        if (kill(stoppedpid, SIGCONT) == -1) {  // Continue the stopped process
-            perror("Error");
-            stoppedpid = DEFAULT_PID;
+    if (bgIndex != 0) {
+        int pid = stoppedProcesses[bgIndex - 1]->pid;
+        char* command = stoppedProcesses[bgIndex - 1]->command;
+        printf("%s &\n", command);
+        if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
+            perror("rsh");
             return;
         }
-        printf("Process with pid %d continued\n", stoppedpid);
-        // Set the pids to default
-        stoppedpid = DEFAULT_PID;
+        bgIndex--;
     } else {
-        printf("No stopped process exists\n");
+        printf("rsh: No process available\n");
     }
 }

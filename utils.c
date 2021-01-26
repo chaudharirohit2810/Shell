@@ -28,7 +28,7 @@ int executeCommand(char* command) {
     char* args[20];
     tokenizeValues(args, command);
     if (execvp(args[0], args) == -1) {
-        perror("Error");
+        perror("rsh");
         return -1;  // Return -1 if error occurs
     }
     return 0;

@@ -25,9 +25,15 @@ void startCtrlZHandler();
 // Setter for currentpid
 void setCurrentpid(int pid);
 
+// To set current command
+void setCurrentCommand(char* cmd);
+
 // To execute "fg" command
 void executeFg();
 
 // To handle "bg" command
 void executeBg();
+
+// To add process running in background
+void addStoppedProcess(int pid, char* cmd);
 

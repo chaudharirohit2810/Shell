@@ -18,12 +18,16 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
         pipe(fd);
         int pid = fork();
         if (pid == -1) {
-            printf("Unable to create child process\n");
+            printf("rsh: Unable to create child process\n");
             return;
         }
         if (isBackground == 0) {
             setCurrentpid(pid);
+            setCurrentCommand(commands[i]);
+        } else {
+            addStoppedProcess(pid, commands[i]);
         }
+
         if (pid == 0) {  // Child Process
             // Ignore Ctrl + Z and Ctrl + C signals in child
             ignoreSignals();
@@ -78,7 +82,7 @@ void pipeWrapper(char* command, int isBackground) {
         // To handle the condition of | after &
         i++;
         if (command[i] == '|') {
-            printf("myshell: syntax error near unexpected token `|'\n");
+            printf("rsh: syntax error near unexpected token `|'\n");
             return;
         }
     } while (command[i] == ' ');
@@ -92,7 +96,7 @@ int main() {
     int pid;
     char cmd[512];
     int exitStatus = 0;
-    printf("Myshell Usage:\n");
+    printf("\nrsh Usage:\n");
     printf("-----------------------------------------------------\n");
     printf("exit: to exit out of shell\n");
     printf("\n");
@@ -100,7 +104,7 @@ int main() {
     startCtrlZHandler();
 
     while (1) {
-        printf("myshell>");
+        printf("rsh>");
         scanf("%[^\n]%*c", cmd);
 
         if (checkExit(cmd) == 0) {  // check for "exit" command

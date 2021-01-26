@@ -49,7 +49,7 @@ int executeOutputRedirection(char* command, char* filename) {
         dup2(fd, STDOUT_FILENO);
         close(fd);
         if (execvp(args[0], args) == -1) {
-            perror("Error");
+            perror("rsh");
             exit(0);
         }
     } else {

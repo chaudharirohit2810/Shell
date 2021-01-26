@@ -45,7 +45,7 @@ int checkOutputRedirection(char* command) {
         return -1;  // Command does not contain output redirection
     }
     char* temp = redirectionArgs[0];
-    for (int i = 2; i < res; i++) {
+    for (int i = 2; i < res; i++) {  // Add additonal arguements after redirection operator in main command
         strcat(temp, redirectionArgs[i]);
         strcat(temp, " ");
     }
@@ -91,15 +91,15 @@ int decodeInputRedirection(char* command, char* args[]) {
     return i;  // Return the number of arguements
 }
 
-// Combine decode and execute of output redirection
+// Combine decode and execute of input redirection
 int checkInputRedirection(char* command) {
     char* redirectionArgs[20];
     int res = decodeInputRedirection(command, redirectionArgs);
     if (res == -1) {
-        return -1;  // Command does not contain output redirection
+        return -1;  // Command does not contain input redirection
     }
     char* temp = redirectionArgs[0];
-    for (int i = 2; i < res; i++) {
+    for (int i = 2; i < res; i++) {  // Add additonal arguements after redirection operator in main command
         strcat(temp, redirectionArgs[i]);
         strcat(temp, " ");
     }
