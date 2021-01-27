@@ -7,9 +7,38 @@ int tokenizeValues(char* args[], char* cmd) {
     char* token = strtok(cmdTemp, " ");
     int i = 0;
     while (token) {
-        args[i] = malloc(strlen(token) + 1);
-        strcpy(args[i], token);
-        token = strtok(NULL, " ");
+        // To separate args with quotes (2nd condition is to check if only one word is preset in arg)
+        if (token[0] == '\"' && token[strlen(token) - 1] != '\"') {
+            args[i] = malloc(512);  // TODO: Find alternative so we don't need to malloc fix size
+            token = token + 1;
+            strcpy(args[i], token);
+            int flag = 1;
+
+            while (token != NULL && token[strlen(token) - 1] != '\"') {
+                if (flag != 1) {  // Do not copy the first word again
+                    strcat(args[i], " ");
+                    strcat(args[i], token);
+                }
+                flag = 0;
+                token = strtok(NULL, " ");
+            }
+
+            if (token != NULL) {  // If token is not null then its a terminating word
+                strcat(args[i], " ");
+                strcat(args[i], token);
+            } else {
+                return -1;  //quotes are not closed
+            }
+            args[i][strlen(args[i]) - 1] = '\0';
+            token = strtok(NULL, " ");
+
+        } else {
+            // For args without quotes
+
+            args[i] = malloc(strlen(token) + 1);
+            strcpy(args[i], token);
+            token = strtok(NULL, " ");
+        }
         i++;
     }
     args[i] = NULL;
@@ -28,7 +57,11 @@ int checkExit(char* cmd) {
 // Utility function to execute command
 int executeCommand(char* command) {
     char* args[20];
-    tokenizeValues(args, command);
+    int res = tokenizeValues(args, command);
+    if (res == -1) {
+        printf("rsh: invalid arguements");
+        return -1;
+    }
     if (execvp(args[0], args) == -1) {
         perror("rsh");
         return -1;  // Return -1 if error occurs

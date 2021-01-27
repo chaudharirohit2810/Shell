@@ -12,6 +12,10 @@ int executeChangeDirectory(char* command) {
     char* cmdTemp = malloc(strlen(command) + 1);
     strcpy(cmdTemp, command);
     int res = tokenizeValues(args, cmdTemp);
+    if (res == -1) {
+        printf("rsh: invalid arguements\n");
+        return -4;  // Invalid arguement
+    }
     if (strcmp("cd", args[0]) != 0) {
         return -1;  // not a CD command
     }

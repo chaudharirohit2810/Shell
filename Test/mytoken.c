@@ -9,13 +9,13 @@ int tokenizeValues(char* args[], char* cmd) {
     char* token = strtok(cmdTemp, " ");
     int i = 0;
     while (token) {
-        if (token[0] == '\"') {
-            args[i] = malloc(512 * sizeof(char));
+        // To separate args with quotes (2nd condition is to check if only one word is preset in arg)
+        if (token[0] == '\"' && token[strlen(token) - 1] != '\"') {
+            args[i] = malloc(512);  // TODO: Find alternative so we don't need to malloc fix size
+            token = token + 1;
             strcpy(args[i], token);
             int flag = 1;
-            // args[i] = token;
             while (token != NULL && token[strlen(token) - 1] != '\"') {
-                /* code */
                 if (flag != 1) {
                     strcat(args[i], " ");
                     strcat(args[i], token);
@@ -23,13 +23,13 @@ int tokenizeValues(char* args[], char* cmd) {
                 flag = 0;
                 token = strtok(NULL, " ");
             }
-            // printf("%s\n", args[i]);
             if (token != NULL) {
                 strcat(args[i], " ");
                 strcat(args[i], token);
             }
+            args[i][strlen(args[i]) - 1] = '\0';
             token = strtok(NULL, " ");
-        } else {
+        } else {  // For args without quotes
             args[i] = malloc(strlen(token) + 1);
             strcpy(args[i], token);
             token = strtok(NULL, " ");

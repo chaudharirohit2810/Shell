@@ -113,6 +113,10 @@ int main() {
 
         char* args[20];
         int argsCount = tokenizeValues(args, cmd);
+        if (argsCount == -1) {
+            printf("rsh: invalid arguements\n");
+            continue;
+        }
 
         if (strcmp(args[0], "bg") == 0) {
             if (args[1]) {
