@@ -1,5 +1,5 @@
 // Separate arguements and command
-// Return value: Number of arguements
+// Return value: Number of arguements, -1 if arguements are invalid
 int tokenizeValues(char* args[], char cmd[]);
 
 

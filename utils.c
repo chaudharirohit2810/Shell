@@ -1,6 +1,7 @@
 #include "lib.h"
 
 // Utility function to separate different arguements
+// Returns number of arguements, if the arguements are invalid then it returns -1
 int tokenizeValues(char* args[], char* cmd) {
     char* cmdTemp = malloc(strlen(cmd) + 1);
     strcpy(cmdTemp, cmd);
@@ -46,6 +47,7 @@ int tokenizeValues(char* args[], char* cmd) {
 }
 
 // To exit out of shell
+// Returns 0 if command is "exit" else -1
 int checkExit(char* cmd) {
     if (strcmp(cmd, "exit") == 0) {
         printf("bye\n");
@@ -55,6 +57,7 @@ int checkExit(char* cmd) {
 }
 
 // Utility function to execute command
+// Returns -1 if some error occcurs
 int executeCommand(char* command) {
     char* args[20];
     int res = tokenizeValues(args, command);
@@ -64,12 +67,13 @@ int executeCommand(char* command) {
     }
     if (execvp(args[0], args) == -1) {
         perror("rsh");
-        return -1;  // Return -1 if error occurs
+        return -1;
     }
     return 0;
 }
 
-// Separate all the backgroung processes
+// To get all the background processes in command
+// Returns -1 if no background process is available
 int isBackground(char* command, char* bgProcesses[]) {
     char* cmdTemp = malloc(strlen(command) + 1);
     strcpy(cmdTemp, command);

@@ -16,27 +16,33 @@ int executeChangeDirectory(char* command);
 
 
 // -------------------------------------------------------------------Signal Handlers---------------------------------------------------------------------
-// To handle SIGINT in parent
+
+// SIGINT (Ctrl + C) handler for parent
 void startCtrlCHandler();
 
-// To handle SIGTSTP in parent
+// SIGTSTP(Ctrl + Z) handler for parent
 void startCtrlZHandler();
 
-// Setter for currentpid
-void setCurrentpid(int pid);
 
-// To set current command
-void setCurrentCommand(char* cmd);
+//------------------------------------------------------------------Commands related to signals----------------------------------------------------------------
 
 // To execute "fg" command
 void executeFg(int index);
 
-// To handle "bg" command
+// To execute "bg" command
 void executeBg(int index);
-
-// To add process running in background
-void addStoppedProcess(int pid, char* cmd);
 
 // To execute "jobs" command
 void executeJobs();
+
+
+//---------------------------------------------------------------------Utils for signal handlers----------------------------------------------------------------
+// Setter for currentpid
+void setCurrentpid(int pid);
+
+// Setter for current command
+void setCurrentCommand(char* cmd);
+
+// To add process running in background
+void addStoppedProcess(int pid, char* cmd);
 
