@@ -21,12 +21,6 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
             printf("rsh: Unable to create child process\n");
             return;
         }
-        if (isBackground == 0) {
-            setCurrentpid(pid);
-            setCurrentCommand(commands[i]);
-        } else {
-            addStoppedProcess(pid, commands[i]);
-        }
 
         if (pid == 0) {  // Child Process
             // Ignore Ctrl + Z and Ctrl + C signals in child
@@ -51,7 +45,13 @@ void executePipeCommands(char* commands[], int n, int isBackground) {
                 exit(0);
             }
 
-        } else {                      // Parent process
+        } else {  // Parent process
+            if (isBackground == 0) {
+                setCurrentpid(pid);
+                setCurrentCommand(commands[i]);
+            } else {
+                addStoppedProcess(pid, commands[i]);
+            }
             if (isBackground == 0) {  // wait only if process is not required to run in background
                 waitpid(-1, NULL, WUNTRACED);
             }
@@ -111,13 +111,41 @@ int main() {
             return 0;
         }
 
-        if (strcmp(cmd, "bg") == 0) {
-            executeBg();
+        char* args[20];
+        int argsCount = tokenizeValues(args, cmd);
+
+        if (strcmp(args[0], "bg") == 0) {
+            if (args[1]) {
+                for (int i = 1; i < argsCount; i++) {
+                    int bgIndex = -1;
+                    if (args[i]) {
+                        char* token = strtok(args[i], "%");
+                        bgIndex = atoi(token);
+                    }
+                    executeBg(bgIndex);
+                }
+            } else {
+                executeBg(-1);
+            }
             continue;
         }
 
-        if (strcmp(cmd, "fg") == 0) {
-            executeFg();
+        if (strcmp(args[0], "fg") == 0) {
+            if (argsCount > 2) {
+                printf("rsh: fg expects at most one arguement\n");
+                continue;
+            }
+            int fgIndex = -1;
+            if (args[1]) {
+                char* token = strtok(args[1], "%");
+                fgIndex = atoi(token);
+            }
+            executeFg(fgIndex);
+            continue;
+        }
+
+        if (strcmp(cmd, "jobs") == 0) {
+            executeJobs();
             continue;
         }
 

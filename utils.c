@@ -1,8 +1,10 @@
 #include "lib.h"
 
 // Utility function to separate different arguements
-int tokenizeValues(char* args[], char cmd[]) {
-    char* token = strtok(cmd, " ");
+int tokenizeValues(char* args[], char* cmd) {
+    char* cmdTemp = malloc(strlen(cmd) + 1);
+    strcpy(cmdTemp, cmd);
+    char* token = strtok(cmdTemp, " ");
     int i = 0;
     while (token) {
         args[i] = malloc(strlen(token) + 1);

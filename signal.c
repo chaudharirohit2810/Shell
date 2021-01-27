@@ -44,6 +44,21 @@ void ctrl_c_handler(int sig) {
             perror("rsh");
             return;
         }
+        int pidIndex = 0;
+        // Find the process index which need to be killed
+        for (int i = 0; i < stoppedProcessesCount; i++) {
+            if (stoppedProcesses[i]->pid == currentpid) {
+                pidIndex = i;
+                break;
+            }
+        }
+
+        // If some middle process is killed then switch the array
+        for (int i = pidIndex + 1; i < stoppedProcessesCount; i++) {
+            stoppedProcesses[i - 1]->pid = stoppedProcesses[i]->pid;
+            stoppedProcesses[i - 1]->command = stoppedProcesses[i]->command;
+        }
+
         stoppedProcessesCount--;
         bgIndex--;
         printf("\npid:%d\tkilled\t\t\t%s\n", currentpid, currentCommand);
@@ -79,9 +94,14 @@ void ctrl_z_handler(int sig) {
         }
         if (flag != 1) {
             addStoppedProcess(currentpid, currentCommand);
+            bgIndex = stoppedProcessesCount;
         }
+
         int printIndex = flag == 0 ? stoppedProcessesCount : bgIndex;
         printf("\n[%d]+\tStopped\t\t\t%s [pid: %d]\n", printIndex, currentCommand, currentpid);
+
+        setCurrentpid(DEFAULT_PID);
+        setCurrentCommand(NULL);
     }
 }
 
@@ -96,41 +116,91 @@ void startCtrlZHandler() {
 
 // ------------------------------------------------------------------bg & fg commands-----------------------------------------------------------------------------
 
-// To execute "fg" command
-void executeFg() {
-    if (bgIndex == 0 && stoppedProcessesCount != 0) {
-        bgIndex = stoppedProcessesCount;
+// Util to execute process in foreground
+void fgProcess(int pid, char* command) {
+    printf("%s\n", command);
+    if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
+        perror("rsh");
+        return;
     }
-    if (bgIndex != 0) {
-        int pid = stoppedProcesses[bgIndex - 1]->pid;
-        char* command = stoppedProcesses[bgIndex - 1]->command;
-        printf("%s\n", command);
-        if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
-            perror("rsh");
+    // When the process is started in foreground again set the current pid and command values  for Ctrl+C handling
+    setCurrentpid(pid);
+    setCurrentCommand(command);
+
+    waitpid(pid, NULL, WUNTRACED);  // Wait for process to end as process is in forefround
+}
+
+// To execute "fg" command
+void executeFg(int index) {
+    if (index == 0) {
+        printf("rsh: invalid process index\n");
+        return;
+    }
+    if (index > 0) {
+        if (index > stoppedProcessesCount || index < -1) {
+            printf("rsh: invalid process index\n");
             return;
         }
-        // When the process is started in foreground again set the current pid and command values  for Ctrl+C handling
-        setCurrentpid(pid);
-        setCurrentCommand(command);
-
-        waitpid(pid, NULL, WUNTRACED);  // Wait for process to end as process is in forefround
+        // To start particular process if arguement is provided
+        int pid = stoppedProcesses[index - 1]->pid;
+        char* command = stoppedProcesses[index - 1]->command;
+        fgProcess(pid, command);
     } else {
-        printf("rsh: No process available\n");
+        // If arguement is not provided then start the last process
+        if (bgIndex == 0 && stoppedProcessesCount != 0) {
+            bgIndex = stoppedProcessesCount;
+        }
+        if (bgIndex != 0) {
+            int pid = stoppedProcesses[bgIndex - 1]->pid;
+            char* command = stoppedProcesses[bgIndex - 1]->command;
+            fgProcess(pid, command);
+        } else {
+            printf("rsh: No process available\n");
+        }
     }
 }
 
 // To execute "bg" command
-void executeBg() {
-    if (bgIndex != 0) {
-        int pid = stoppedProcesses[bgIndex - 1]->pid;
-        char* command = stoppedProcesses[bgIndex - 1]->command;
+void executeBg(int index) {
+    if (index == 0) {
+        printf("rsh: invalid process index\n");
+        return;
+    }
+    if (index > 0) {
+        if (index > stoppedProcessesCount || index < -1) {
+            printf("rsh: invalid process index\n");
+            return;
+        }
+        int pid = stoppedProcesses[index - 1]->pid;
+        char* command = stoppedProcesses[index - 1]->command;
         printf("%s &\n", command);
         if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
             perror("rsh");
             return;
         }
-        bgIndex--;
     } else {
-        printf("rsh: No process available\n");
+        if (bgIndex != 0) {
+            int pid = stoppedProcesses[bgIndex - 1]->pid;
+            char* command = stoppedProcesses[bgIndex - 1]->command;
+            printf("%s &\n", command);
+            if (kill(pid, SIGCONT) == -1) {  // Continue the stopped process
+                perror("rsh");
+                return;
+            }
+            bgIndex--;
+        } else {
+            printf("rsh: No processes available\n");
+        }
+    }
+}
+
+// To execute "jobs" command
+void executeJobs() {
+    if (stoppedProcessesCount == 0) {
+        printf("rsh: No processes available\n");
+        return;
+    }
+    for (int i = 0; i < stoppedProcessesCount; i++) {
+        printf("[%d]\t%d\t\t\t%s\n", i + 1, stoppedProcesses[i]->pid, stoppedProcesses[i]->command);
     }
 }

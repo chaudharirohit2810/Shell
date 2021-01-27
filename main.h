@@ -29,11 +29,14 @@ void setCurrentpid(int pid);
 void setCurrentCommand(char* cmd);
 
 // To execute "fg" command
-void executeFg();
+void executeFg(int index);
 
 // To handle "bg" command
-void executeBg();
+void executeBg(int index);
 
 // To add process running in background
 void addStoppedProcess(int pid, char* cmd);
+
+// To execute "jobs" command
+void executeJobs();
 
